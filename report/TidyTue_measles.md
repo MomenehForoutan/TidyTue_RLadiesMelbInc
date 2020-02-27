@@ -1,18 +1,22 @@
-Tidy Tuesday at R-Ladies Melbourne Inc: data wrangling and visualisation
-of the measles vaccination rate in the US
-================
-Momeneh (Sepideh) Foroutan
-28 February, 2020
+-   [Explore the data](#explore-the-data)
+-   [Visualisation](#visualisation)
+    -   [Barplot](#barplot)
+    -   [Scatterplot](#scatterplot)
+    -   [Map](#map)
+        -   [coord\_quickmap](#coord_quickmap)
+        -   [Make it interactive](#make-it-interactive)
+        -   [usmap](#usmap)
+-   [Session info](#session-info)
 
-Measles is a very contagious respiratory infection, and this data have
-vaccination rates for 46,412 schools in 32 states in the US, inluding
-overall vaccination rate, Measles, Mumps, and Rubella (MMR) vaccination
-rate, as well percent of student who were exempted form the vaccination
-due to different reasons. Here you can find more details about this
-data.
+Measles is a very contagious respiratory infection, and [this tidy
+tuesday
+data](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-02-25/readme.md)
+has vaccination rates for 46,412 schools in 32 states in the US,
+inluding overall vaccination rate, Measles, Mumps, and Rubella (MMR)
+vaccination rate, as well percent of student who were exempted form the
+vaccination due to different reasons.
 
-First we read in the data, and load required
-libraries.
+First we read in the data, and load the `tidyverse` library.
 
 ``` r
 measles <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-25/measles.csv')
@@ -20,7 +24,8 @@ measles <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/ti
 library(tidyverse)
 ```
 
-# Explore data
+Explore the data
+================
 
 Looking at the dimension, head, structure and summary of the data, gives
 us some insight about the datasets. Bases on these, we realise that
@@ -179,9 +184,11 @@ mstat <- measles %>%
   data.frame() 
 ```
 
-# Visualisation
+Visualisation
+=============
 
-## Barplot
+Barplot
+-------
 
 In order to make barplots for the vaccination rate columns, we make sure
 that we filter out -1 values from that column. As we have calculated the
@@ -199,7 +206,7 @@ ggplot(., aes(x = reorder(state, ave_overall), y = ave_overall)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ``` r
 mstat %>%  
@@ -211,7 +218,7 @@ ggplot(., aes(x = reorder(state, ave_mmr), y = ave_mmr)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
 Now, if we want to know what percent exemption of different reasons we
 have in each state, we should first change the structure of the data to
@@ -240,9 +247,10 @@ mstat %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
-## Scatterplot
+Scatterplot
+-----------
 
 The other way of looking at the data is to examine associations. For
 example, there seems to be a positive correlation between overall
@@ -258,9 +266,10 @@ mstat %>%
   theme_bw()
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
-## Map
+Map
+---
 
 We can also examine this data in form of a map. There are several ways
 of doing this but here I am giving two simple examples to get started.
@@ -280,7 +289,7 @@ ggplot(mstat, aes(lng, lat)) +
   coord_quickmap()
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 ``` r
 mstat %>% 
@@ -290,7 +299,7 @@ ggplot(., aes(lng, lat)) +
   coord_quickmap()
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-9-2.png)
 
 ``` r
 mstat %>% 
@@ -300,7 +309,7 @@ ggplot(., aes(lng, lat, color = state)) +
   coord_quickmap()
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-9-3.png)
 
 We can also colour the points based on some continuous values, such as
 mmr or overall. To have a better contrast in the colour, I decided to
@@ -319,7 +328,7 @@ mstat %>%
   theme_dark()
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-10-1.png)
 
 ``` r
 mstat %>%
@@ -333,14 +342,15 @@ mstat %>%
   theme_dark()
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-10-2.png)
 
 ### Make it interactive
 
 Now, we subset the data to those that do not have -1 in overall column
 and color based on the mmr values. We can zoom on different states and
 make the plots inteactive using the plotly package and `ggplotly()`
-function. The code has been commented below.
+function. Uncomment `plotly::ggplotly(p, tiptools = "text")` in the
+below code in your computer to see the interactivity.
 
 ``` r
 p <- mstat %>%
@@ -356,7 +366,7 @@ p <- mstat %>%
 p
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 ``` r
 # plotly::ggplotly(p, tiptools = "text")
@@ -396,7 +406,7 @@ plot_usmap(
   theme(panel.background = element_rect(color = "white", fill = "gray10"))
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 ``` r
 mstatUniqueState %>% 
@@ -413,9 +423,10 @@ plot_usmap(
   theme(panel.background = element_rect(color = "white", fill = "gray10"))
 ```
 
-![](TidyTue_measles_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-12-2.png)
 
-# Session info
+Session info
+============
 
 ``` r
 sessionInfo()
@@ -455,7 +466,3 @@ sessionInfo()
     ## [45] crayon_1.3.4      pkgconfig_2.0.3   xml2_1.2.2        reprex_0.3.0     
     ## [49] lubridate_1.7.4   assertthat_0.2.1  rmarkdown_2.1     httr_1.4.1       
     ## [53] rstudioapi_0.11   R6_2.4.1          nlme_3.1-144      compiler_3.6.1
-
-<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 598px;">
-
-</div>
