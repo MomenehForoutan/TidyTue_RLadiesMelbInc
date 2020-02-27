@@ -1,3 +1,7 @@
+Tidy Tuesday at R-Ladies Melbourne Inc: data wrangling and visualisation of the measles vaccination rate in the US
+===============
+Momeneh (Sepideh) Foroutan (27th of Feb 2020)
+---------------------------------
 -   [Explore the data](#explore-the-data)
 -   [Visualisation](#visualisation)
     -   [Barplot](#barplot)
