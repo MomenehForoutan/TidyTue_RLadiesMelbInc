@@ -1,7 +1,3 @@
-Tidy Tuesday at R-Ladies Melbourne Inc: data wrangling and visualisation of the measles vaccination rate in the US
-===============
-Momeneh (Sepideh) Foroutan (27th of Feb 2020)
----------------------------------
 -   [Explore the data](#explore-the-data)
 -   [Visualisation](#visualisation)
     -   [Barplot](#barplot)
@@ -173,74 +169,74 @@ apply(measles[, selCols], 2, table )
     ##        BOCES      Charter Kindergarten    Nonpublic      Private       Public 
     ##           47          276         1488          173         6815        20692
 
-Now, to do some visualisations, lets calculate the average of the
-vaccination rates and different expemtion columns.
-
-``` r
-mstat <- measles %>%
-  group_by(state) %>%
-  mutate(ave_xmed = mean(xmed, na.rm = T),
-         ave_xper = mean(xper, na.rm = T),
-         ave_xrel = mean(xrel, na.rm = T),
-         ave_enroll = mean(enroll, na.rm = T),
-         ave_mmr = mean(mmr, na.rm = T),
-         ave_overall = mean(overall, na.rm = T)) %>%
-  data.frame() 
-```
-
 Visualisation
 =============
+
+Now, to do some visualisations in the below steps, we calculate the
+average of the vaccination rates and different expemtion columns and
+generate new columns storing these values. Note that we use `group_by()`
+and `summarise()` functions to calculate mean values for each state for
+these variables; this would drop rows after mean calculations on each
+group.
 
 Barplot
 -------
 
 In order to make barplots for the vaccination rate columns, we make sure
-that we filter out -1 values from that column. As we have calculated the
-mean vaccination rate values per state, we remove duplicated rows too.
-Note that we can order the barplots, simply by using the `reorder()`
-function.
+that we filter out -1 values from that column. Note that we can order
+the barplots, simply by using the `reorder()` function.
 
 ``` r
-mstat %>%  
-  filter(! duplicated(state) & ave_overall != -1) %>% 
+measles %>%
+  group_by(state) %>%
+  summarise(ave_overall = mean(overall, na.rm = T)) %>% 
+  filter(ave_overall != -1) %>% 
 ggplot(., aes(x = reorder(state, ave_overall), y = ave_overall)) + 
   geom_bar(stat = "identity", fill = "gray20") +
   ggtitle("Average overall vaccination across states") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-6-1.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-5-1.png)
 
 ``` r
-mstat %>%  
-  filter(! duplicated(state) & ave_mmr != -1) %>% 
+measles %>%
+  group_by(state) %>%
+  summarise(ave_mmr = mean(overall, na.rm = T)) %>% 
+  filter(ave_mmr != -1) %>% 
 ggplot(., aes(x = reorder(state, ave_mmr), y = ave_mmr)) + 
-  geom_bar(stat = "identity", fill = "gray60") +
+  geom_bar(stat = "identity", fill = "gray20") +
   ggtitle("Average MMR vaccination across states") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-6-2.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-5-2.png)
 
-Now, if we want to know what percent exemption of different reasons we
-have in each state, we should first change the structure of the data to
-be in the long format, so that all teh info for different exemptions go
-into one column. For this, we use `pivot_longer()` function. The output
-of this can be directly used in the `ggplot()` function. Note that we
-also filter for NaN valuse in the new column “Average\_values”.
+Now, if we want to know what percent exemptions we have in each state,
+we first calculate the average of percent exemptions and then, change
+the structure of the data to be in the long format; this puts all the
+info for different exemptions into one column. To do this this, we use
+`pivot_longer()` function. The output of this can be directly used in
+the `ggplot()` function. Note that we also filter for NaN valuse in the
+new column “Average\_values”.
 
 ``` r
-mstat %>%
-  filter(!duplicated(state)) %>%
+measles %>%
+  group_by(state) %>%
+  mutate(
+    ave_xmed = mean(xmed, na.rm = T),
+    ave_xper = mean(xper, na.rm = T),
+    ave_xrel = mean(xrel, na.rm = T)
+  ) %>%
   pivot_longer(.,
                cols = ave_xmed:ave_xrel,
                names_to = "Exemption",
                values_to = "Average_values") %>%
   filter(!is.nan(Average_values)) %>%
   ggplot(., aes(
-    x = reorder(state, ave_mmr),
+    x = state,
     y = Average_values,
     fill = Exemption
   )) +
@@ -251,7 +247,7 @@ mstat %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 Scatterplot
 -----------
@@ -263,14 +259,14 @@ such as Colorado that have high mmr but generally lower overall
 vaccination rate.
 
 ``` r
-mstat %>%
+measles %>%
   filter(overall != -1 & mmr != -1) %>%
   ggplot(., aes(x = mmr, y = overall, color = state)) +
   geom_point(alpha = 0.6) +
   theme_bw()
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-8-1.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 Map
 ---
@@ -285,43 +281,43 @@ These include using the `coord_quickmap()` function from ggplot2 and
 Here, we plot all lng and lat, and then because there seem to be some
 outliers in these data, we focus on only those lng and lat that properly
 covers the US coordinates. Then we show how to simply color that based
-on state.
+on the state column.
 
 ``` r
-ggplot(mstat, aes(lng, lat)) + 
+ggplot(measles, aes(lng, lat)) + 
   geom_point(size = .25, show.legend = FALSE) +
   coord_quickmap()
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-9-1.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 ``` r
-mstat %>% 
+measles %>% 
   filter(lng < -60 ) %>% 
 ggplot(., aes(lng, lat)) + 
   geom_point(size = .25, show.legend = FALSE) +
   coord_quickmap()
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-9-2.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-8-2.png)
 
 ``` r
-mstat %>% 
+measles %>% 
   filter(lng < -60 ) %>% 
 ggplot(., aes(lng, lat, color = state)) + 
   geom_point(size = .25, show.legend = FALSE) +
   coord_quickmap()
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-9-3.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-8-3.png)
 
 We can also colour the points based on some continuous values, such as
 mmr or overall. To have a better contrast in the colour, I decided to
-keep -1 values, however, you can remove it and see what your plot looks
-like.
+keep -1 values, however, you can remove them (by uncommenting the
+commonted line) and see how your plots looks like.
 
 ``` r
-mstat %>%
+measles %>%
   filter(lng < -60) %>%
   # filter(mmr != -1) %>%
   ggplot(., aes(lng, lat, color = mmr)) +
@@ -332,10 +328,10 @@ mstat %>%
   theme_dark()
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-10-1.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 ``` r
-mstat %>%
+measles %>%
   filter(lng < -60) %>%
   # filter(overall != -1) %>%
   ggplot(., aes(lng, lat, color = overall)) +
@@ -346,7 +342,7 @@ mstat %>%
   theme_dark()
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-10-2.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-9-2.png)
 
 ### Make it interactive
 
@@ -354,10 +350,10 @@ Now, we subset the data to those that do not have -1 in overall column
 and color based on the mmr values. We can zoom on different states and
 make the plots inteactive using the plotly package and `ggplotly()`
 function. Uncomment `plotly::ggplotly(p, tiptools = "text")` in the
-below code in your computer to see the interactivity.
+below code in your script to see the interactivity.
 
 ``` r
-p <- mstat %>%
+p <- measles %>%
   filter(lng < -110) %>%
   filter(overall != -1) %>%
   ggplot(., aes(lng, lat, color = mmr, text = name)) +
@@ -370,7 +366,7 @@ p <- mstat %>%
 p
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-11-1.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-10-1.png)
 
 ``` r
 # plotly::ggplotly(p, tiptools = "text")
@@ -393,41 +389,44 @@ to visualise it.
 ``` r
 library(usmap)
 
-mstatUniqueState <- mstat[! duplicated(mstat$state), ]
 abbr_state <- tibble(state = state.name, abb = state.abb)
-  
-mstatUniqueState %>% 
-  filter(ave_mmr != -1) %>% 
-  left_join(abbr_state) %>% 
-plot_usmap(
-  data = .,
-  region = "state",
-  values = "ave_mmr",
-  color = "purple"
-) +
+
+measles %>%
+  group_by(state) %>%
+  summarise(ave_mmr = mean(mmr, na.rm = T)) %>%
+  filter(ave_mmr != -1) %>%
+  left_join(abbr_state) %>%
+  plot_usmap(
+    data = .,
+    region = "state",
+    values = "ave_mmr",
+    color = "purple"
+  ) +
   scale_fill_viridis_c(name = "MMR", label = scales::comma) +
   theme(legend.position = "right") +
   theme(panel.background = element_rect(color = "white", fill = "gray10"))
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-12-1.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 ``` r
-mstatUniqueState %>% 
-  filter(ave_overall != -1) %>% 
-  left_join(abbr_state) %>% 
-plot_usmap(
-  data = .,
-  region = "state",
-  values = "ave_overall",
-  color = "purple"
-) +
+measles %>%
+  group_by(state) %>%
+  summarise(ave_overall = mean(overall, na.rm = T)) %>%
+  filter(ave_overall != -1) %>%
+  left_join(abbr_state) %>%
+  plot_usmap(
+    data = .,
+    region = "state",
+    values = "ave_overall",
+    color = "purple"
+  ) +
   scale_fill_viridis_c(name = "Overall", label = scales::comma) +
   theme(legend.position = "right") +
   theme(panel.background = element_rect(color = "white", fill = "gray10"))
 ```
 
-![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-12-2.png)
+![](TidyTue_measles_files/figure-markdown_github/unnamed-chunk-11-2.png)
 
 Session info
 ============
