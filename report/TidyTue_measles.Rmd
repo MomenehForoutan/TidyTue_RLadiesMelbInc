@@ -41,7 +41,7 @@ selCols <- c("state", "year", "type")
 apply(measles[, selCols], 2, table )
 ```
 
-Now, to do some visualisations, lets calculate the average of the vaccination rates and different expemtion columns. 
+Now, to do some visualisations, lets calculate the average of the vaccination rates and different expemtion columns and generate new columns storing these values. Note that we could use `summarise()` function to calculate the mean for these columns too, however, that would drop rows after mean calculations on each group. Try using `summarise()` instead of `mutate()` and see how this would be different. As I will need all rows in the data set in one of the plots that I generate later, I do not sue `summarise()`.
 
 ```{r}
 mstat <- measles %>%
@@ -51,8 +51,7 @@ mstat <- measles %>%
          ave_xrel = mean(xrel, na.rm = T),
          ave_enroll = mean(enroll, na.rm = T),
          ave_mmr = mean(mmr, na.rm = T),
-         ave_overall = mean(overall, na.rm = T)) %>%
-  data.frame() 
+         ave_overall = mean(overall, na.rm = T)) 
 ```
 
 # Visualisation
@@ -79,7 +78,7 @@ ggplot(., aes(x = reorder(state, ave_mmr), y = ave_mmr)) +
 
 Now, if we want to know what percent exemption of different reasons we have in each state, we should first change the structure of the data to be in the long format, so that all teh info for different exemptions go into one column. For this, we use `pivot_longer()` function. The output of this can be directly used in the `ggplot()` function. Note that we also filter for NaN valuse in the new column "Average_values".
 ```{r}
-mstat %>%
+mstat2 %>%
   filter(!duplicated(state)) %>%
   pivot_longer(.,
                cols = ave_xmed:ave_xrel,
